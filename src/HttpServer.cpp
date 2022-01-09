@@ -80,7 +80,7 @@ int HttpServer::createSocket(const std::string &host, const std::string &port) {
     }
     freeaddrinfo(bindAddress);
 
-    printf("Listening...\n");
+    std::cout << "Listening..." << std::endl;
     if (listen(listenSocket, 10) < 0) {
         std::cerr << "Failed to listen socket: " << errno << std::endl;
         exit(1);
@@ -148,12 +148,74 @@ fd_set HttpServer::waitOnClients(int serverSocket) {
     return reads;
 }
 
-void HttpServer::send400Message(ClientInfo &clientInfo) {
+void HttpServer::send400ErrorMessage(ClientInfo &clientInfo) {
     send(clientInfo.socket, content_400, strlen(content_400),0);
     dropClient(clientInfo);
 }
 
-void HttpServer::send404Message(ClientInfo &clientInfo) {
+void HttpServer::send404ErrorMessage(ClientInfo &clientInfo) {
     send(clientInfo.socket, content_404, strlen(content_400),0);
+    dropClient(clientInfo);
+}
+
+void HttpServer::serveResource(ClientInfo &clientInfo, std::string &path) {
+    std::string clientAddress = std::string(getClientAddress(clientInfo));
+    std::cout << "serve_resource..." << std::endl;
+    std::cout << "Client Address: " << clientAddress << std::endl;
+    std::cout << "Requested Path: " << path << std::endl;
+
+    if(path == "/"){
+        path = "/index.html";
+    }
+
+    if(path.length() > 100){
+        send400ErrorMessage(clientInfo);
+        return;
+    }
+
+    if(path.find("..") != std::string::npos){
+        send404ErrorMessage(clientInfo);
+        return;
+    }
+
+    std::string fullPath = "public" + path;
+
+    FILE *filePtr = fopen(fullPath.c_str(),"rb");
+
+    if(filePtr == NULL){
+        send404ErrorMessage(clientInfo);
+        return;
+    }
+
+    fseek(filePtr, 0L, SEEK_END);
+    size_t contentLength = ftell(filePtr);
+    rewind(filePtr);
+
+    std::string contentType = getContentType(fullPath);
+
+    char buffer[BUFFER_SIZE];
+
+    sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+    send(clientInfo.socket, buffer, strlen(buffer), 0);
+
+    sprintf(buffer, "Connection: close\r\n");
+    send(clientInfo.socket, buffer, strlen(buffer), 0);
+
+    sprintf(buffer, "Content-Length: %zu\r\n", contentLength);
+    send(clientInfo.socket, buffer, strlen(buffer), 0);
+
+    sprintf(buffer, "Content-Type: %s\r\n", contentType.c_str());
+    send(clientInfo.socket, buffer, strlen(buffer), 0);
+
+    sprintf(buffer, "\r\n");
+    send(clientInfo.socket, buffer, strlen(buffer), 0);
+
+    int r;
+
+    do {
+        send(clientInfo.socket, buffer, r, 0);
+    } while ((r = fread(buffer, 1, BUFFER_SIZE, filePtr)));
+
+    fclose(filePtr);
     dropClient(clientInfo);
 }

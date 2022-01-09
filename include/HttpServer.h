@@ -35,8 +35,9 @@ private:
     void dropClient(struct ClientInfo& clientInfo);
     const char* getClientAddress(const struct ClientInfo& clientInfo);
     fd_set waitOnClients(int serverSocket);
-    void send400Message(struct ClientInfo& clientInfo);
-    void send404Message(struct ClientInfo& clientInfo);
+    void send400ErrorMessage(struct ClientInfo& clientInfo);
+    void send404ErrorMessage(struct ClientInfo& clientInfo);
+    void serveResource(struct ClientInfo& clientInfo, std::string& path);
 
     std::map<std::string, std::string> contentTypeMap;
     std::vector<struct ClientInfo> clients;
