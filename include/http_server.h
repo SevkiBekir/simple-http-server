@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "defs.h"
 
 struct ClientInfo;
 
@@ -24,13 +25,16 @@ public:
     HttpServer(HttpServer&& httpServer) = default;
     HttpServer& operator=(HttpServer&& httpServer) = default;
 
+    int run();
+    void closeSocket(int socket);
+    void closeServer();
+
 protected:
 
 private:
     void init();
-    int run();
     void initContentTypeMap();
-    int createSocket(const std::string& host, const std::string& port);
+    int createSocket(const std::string& port);
     std::string getContentType(const std::string& path);
     ClientInfo& getClient(int socket);
     void dropClient(struct ClientInfo& clientInfo);
@@ -43,6 +47,7 @@ private:
     std::map<std::string, std::string> contentTypeMap;
     std::vector<struct ClientInfo> clients;
     int port;
+    int serverSocket;
 
 
 

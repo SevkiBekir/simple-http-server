@@ -11,15 +11,16 @@
 #define SIMPLE_HTTP_SERVER_DEFS_H
 
 #include <cstdint>
+#include <sys/socket.h>
 
-const uint16_t MAX_REQUEST_SIZE = 2047;
-const uint16_t BUFFER_SIZE = 1024;
+static const uint16_t MAX_REQUEST_SIZE = 2047;
+static const uint16_t BUFFER_SIZE = 1024;
 
-const char *content_400 = "HTTP/1.1 400 Bad Request\r\n"
+static const char *CONTENT_400 = "HTTP/1.1 400 Bad Request\r\n"
                    "Connection: close\r\n"
                    "Content-Length: 11\r\n\r\nBad Request";
 
-const char *content_404 = "HTTP/1.1 404 Not Found\r\n"
+static const char *CONTENT_404 = "HTTP/1.1 404 Not Found\r\n"
                    "Connection: close\r\n"
                    "Content-Length: 9\r\n\r\nNot Found";
 

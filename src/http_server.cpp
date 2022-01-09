@@ -8,20 +8,19 @@
 #include <iostream>
 #include "http_server.h"
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
-#include "defs.h"
 
-HttpServer::HttpServer(int port) : port(port) {
+HttpServer::HttpServer(int port) : port(port), serverSocket(-1) {
     init();
 }
 
 void HttpServer::init() {
     initContentTypeMap();
+    serverSocket = -1;
 }
 
 void HttpServer::initContentTypeMap() {
@@ -50,7 +49,7 @@ std::string HttpServer::getContentType(const std::string &path) {
     return found->second;
 }
 
-int HttpServer::createSocket(const std::string &host, const std::string &port) {
+int HttpServer::createSocket(const std::string &port) {
     std::cout << "Configuring local address..." << std::endl;
     struct addrinfo hints{};
     memset(&hints, 0, sizeof(hints));
@@ -59,7 +58,7 @@ int HttpServer::createSocket(const std::string &host, const std::string &port) {
     hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo *bindAddress;
-    auto result = getaddrinfo(host.c_str(), port.c_str(), &hints, &bindAddress);
+    auto result = getaddrinfo(0, port.c_str(), &hints, &bindAddress);
     if(result != 0){
         std::cerr << "Failed to get binding address info" << std::endl;
         return result;
@@ -110,7 +109,7 @@ ClientInfo &HttpServer::getClient(int socket) {
 }
 
 void HttpServer::dropClient(struct ClientInfo &clientInfo) {
-    close(clientInfo.socket);
+    closeSocket(clientInfo.socket);
     auto itr = std::find(clients.begin(), clients.end(), clientInfo);
     if (itr == clients.end()){
         std::cerr << "Failed to drop client " << std::endl;
@@ -149,12 +148,12 @@ fd_set HttpServer::waitOnClients(int serverSocket) {
 }
 
 void HttpServer::send400ErrorMessage(ClientInfo &clientInfo) {
-    send(clientInfo.socket, content_400, strlen(content_400),0);
+    send(clientInfo.socket, CONTENT_400, strlen(CONTENT_400),0);
     dropClient(clientInfo);
 }
 
 void HttpServer::send404ErrorMessage(ClientInfo &clientInfo) {
-    send(clientInfo.socket, content_404, strlen(content_400),0);
+    send(clientInfo.socket, CONTENT_404, strlen(CONTENT_404),0);
     dropClient(clientInfo);
 }
 
@@ -221,7 +220,7 @@ void HttpServer::serveResource(ClientInfo &clientInfo, std::string &path) {
 }
 
 int HttpServer::run() {
-    int serverSocket = createSocket(0, std::to_string(port));
+    serverSocket = createSocket(std::to_string(port));
 
     while(true) {
 
@@ -234,11 +233,11 @@ int HttpServer::run() {
             client.socket = accept(serverSocket, (struct sockaddr*) &(client.address), &(client.addressLength));
 
             if (client.socket < 0) {
-                std::cerr << "Failed to create listen socket: " << errno << std::endl;
+                std::cerr << "Failed to accept socket: " << errno << std::endl;
                 return 1;
             }
 
-            std::cout << "New connection occurred from " << getClientAddress(client);
+            std::cout << "New connection occurred from " << getClientAddress(client) << std::endl;
 
         }
 
@@ -285,7 +284,15 @@ int HttpServer::run() {
 
     }
 
+    return 0;
+}
+
+void HttpServer::closeSocket(int socket) {
     std::cout << "Closing socket..." << std::endl;
     close(serverSocket);
-    return 0;
+}
+
+void HttpServer::closeServer() {
+    closeSocket(serverSocket);
+
 }
