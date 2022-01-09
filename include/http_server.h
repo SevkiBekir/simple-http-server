@@ -5,8 +5,8 @@
    Description: Http Server Class
 *************************************************************************/
 
-#ifndef SIMPLE_HTTP_SERVER_HTTPSERVER_H
-#define SIMPLE_HTTP_SERVER_HTTPSERVER_H
+#ifndef SIMPLE_HTTP_SERVER_HTTP_SERVER_H
+#define SIMPLE_HTTP_SERVER_HTTP_SERVER_H
 
 
 #include <map>
@@ -47,4 +47,4 @@ private:
 };
 
 
-#endif //SIMPLE_HTTP_SERVER_HTTPSERVER_H
+#endif //SIMPLE_HTTP_SERVER_HTTP_SERVER_H
