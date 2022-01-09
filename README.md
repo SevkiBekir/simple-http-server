@@ -10,3 +10,6 @@ To build the project, run the build script
 ```
 
 For any questions, please send an email to bekirsevki@gmail.com
+
+## Test
+To test the application, you can request to http://127.0.0.1:8080/index.html
