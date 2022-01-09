@@ -2,8 +2,6 @@
    defs.h
    Author: Sevki Kocadag, skocadag@juniper.net
 
-   (C) 2021, Juniper Networks
-
    Description: Definitios of the project
 *************************************************************************/
 
