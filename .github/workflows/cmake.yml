@@ -27,5 +27,5 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build/${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}} build/.
+      run: cmake --build ${{github.workspace}}/build/${{env.BUILD_TYPE}} --config ${{env.BUILD_TYPE}}
       
