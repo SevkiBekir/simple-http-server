@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <cstring>
+#include <algorithm>
 
 HttpServer::HttpServer(int port) : port(port), serverSocket(-1) {
     init();
