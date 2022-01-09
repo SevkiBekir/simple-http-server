@@ -1,2 +1,4 @@
 /build/debug/*
 .idea
+
+!/build/debug/.gitkeep
