@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
+#include <cstring>
 
 HttpServer::HttpServer(int port) : port(port), serverSocket(-1) {
     init();
