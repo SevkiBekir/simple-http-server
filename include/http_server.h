@@ -17,7 +17,7 @@ struct ClientInfo;
 
 class HttpServer {
 public:
-    HttpServer();
+    HttpServer(int port);
     virtual ~HttpServer() = default;
     HttpServer(const HttpServer& httpServer) = default;
     HttpServer& operator=(const HttpServer& httpServer) = default;
@@ -28,6 +28,7 @@ protected:
 
 private:
     void init();
+    int run();
     void initContentTypeMap();
     int createSocket(const std::string& host, const std::string& port);
     std::string getContentType(const std::string& path);
@@ -41,6 +42,7 @@ private:
 
     std::map<std::string, std::string> contentTypeMap;
     std::vector<struct ClientInfo> clients;
+    int port;
 
 
 

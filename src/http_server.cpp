@@ -16,7 +16,7 @@
 #include <errno.h>
 #include "defs.h"
 
-HttpServer::HttpServer() {
+HttpServer::HttpServer(int port) : port(port) {
     init();
 }
 
@@ -218,4 +218,74 @@ void HttpServer::serveResource(ClientInfo &clientInfo, std::string &path) {
 
     fclose(filePtr);
     dropClient(clientInfo);
+}
+
+int HttpServer::run() {
+    int serverSocket = createSocket(0, std::to_string(port));
+
+    while(true) {
+
+        fd_set reads;
+        reads = waitOnClients(serverSocket);
+
+        if (FD_ISSET(serverSocket, &reads)) {
+            auto& client = getClient(-1);
+
+            client.socket = accept(serverSocket, (struct sockaddr*) &(client.address), &(client.addressLength));
+
+            if (client.socket < 0) {
+                std::cerr << "Failed to create listen socket: " << errno << std::endl;
+                return 1;
+            }
+
+            std::cout << "New connection occurred from " << getClientAddress(client);
+
+        }
+
+        for (auto& client: clients) {
+            if (FD_ISSET(client.socket, &reads)) {
+                if (MAX_REQUEST_SIZE == client.received) {
+                    send400ErrorMessage(client);
+                    continue;
+                }
+
+                int received = recv(client.socket, client.request + client.received, MAX_REQUEST_SIZE - client.received, 0);
+
+                if(received < 1){
+                    std::cout << "Unexpected disconnection occurred from " << getClientAddress(client) << std::endl;
+                    dropClient(client);
+                    continue;
+                }
+
+                client.received += received;
+                client.request[client.received] = 0;
+
+                char *requestLine = strstr(client.request, "\r\n\r\n");
+                if (requestLine != NULL) {
+                    *requestLine = 0;
+
+                    if (strncmp("GET /", client.request, 5)) {
+                        send400ErrorMessage(client);
+                        continue;
+                    }
+
+                    char *path = client.request + 4;
+                    char *endPath = strstr(path, " ");
+                    if (endPath == NULL) {
+                        send400ErrorMessage(client);
+                        continue;
+                    }
+
+                    *endPath = 0;
+                    std::string strPath(path);
+                    serveResource(client, strPath);
+                }
+            }
+        }
+
+    }
+
+    std::cout << "Closing socket..." << std::endl;
+    close(serverSocket);
+    return 0;
 }
